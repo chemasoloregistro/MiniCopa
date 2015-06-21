@@ -1,0 +1,91 @@
+setwd("/.../ACB")
+# install.packages("epitools")
+library(epitools)
+library(XML)
+
+url2015 <- "http://www.acb.com/redaccion.php?id=110619"
+url2014 <- "http://www.acb.com/redaccion.php?id=100917"
+url2013 <- "http://www.acb.com/redaccion.php?id=90866"
+url2012 <- "http://www.acb.com/redaccion_copa.php?id=82319"
+url2011 <- "http://www.acb.com/redaccion.php?id=73470"
+
+plantillas.raw <- htmlParse(url2011)
+plantillas.table <- readHTMLTable(plantillas.raw, which = 1)
+
+new.plantillas.table <- subset(plantillas.table)
+names(new.plantillas.table)[1] <- "Number"
+names(new.plantillas.table)[2] <- "Name"
+names(new.plantillas.table)[3] <- "Blank"
+names(new.plantillas.table)[4] <- "Position"
+names(new.plantillas.table)[5] <- "Date"
+new.plantillas.table <- subset(new.plantillas.table, !is.na(Position))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><a9>",
+                                             replacement= "e"))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><a1>",
+                                             replacement= "a"))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><ad>",
+                                             replacement= "i"))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><b1>",
+                                             replacement= "n"))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><b3>",
+                                             replacement= "o"))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><8d>",
+                                             replacement= "I"))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><81>",
+                                             replacement= "A"))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><ba>",
+                                             replacement= "u"))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><a0>",
+                                             replacement= "a"))
+new.plantillas.table <- as.data.frame(sapply(new.plantillas.table,gsub,pattern="<c3><a8>",
+                                             replacement= "e"))
+new.plantillas.table
+
+write.csv(new.plantillas.table, file = "plantillas_Copa_2015.csv")
+write.csv(new.plantillas.table, file = "plantillas_Copa_2014.csv")
+write.csv(new.plantillas.table, file = "plantillas_Copa_2013.csv")
+write.csv(new.plantillas.table, file = "plantillas_Copa_2012.csv")
+write.csv(new.plantillas.table, file = "plantillas_Copa_2011.csv")
+
+names(new.plantillas.table)
+names(new.plantillas.table)[names(new.plantillas.table)=="Blank"]<-"Surname"
+names(new.plantillas.table)[names(new.plantillas.table)=="V6"]<-"Date"
+
+plant2015 <- read.csv("plantillas_Copa_2015.csv")
+plant2013 <- read.csv("plantillas_Copa_2013.csv")
+plant2012 <- read.csv("plantillas_Copa_2012.csv")
+plant2011 <- read.csv("plantillas_Copa_2011.csv")
+
+plant2015 <- data.frame(plant2015, YEAR = "2015")
+plant2013 <- data.frame(plant2013, YEAR = "2013")
+plant2012 <- data.frame(plant2012, YEAR = "2012")
+plant2011 <- data.frame(plant2011, YEAR = "2011")
+
+plant2012$Name <- paste(plant2012$Name, plant2012$Blank, plant2012$Position, sep=" ")
+plant2011$Name <- paste(plant2011$Name, plant2011$Surname, sep=" ")
+plant2015$Date <- as.Date(plant2015$Date, "%d/%m/%Y")
+plant2013$Date <- as.Date(plant2013$Date, "%d/%m/%Y")
+plant2012$Date <- as.Date(plant2012$Date, "%d/%m/%Y")
+plant2011$Date <- as.Date(plant2011$Date, "%d/%m/%Y")
+names(plant2012)[names(plant2012)=="Blank"] <- "NoName1"
+names(plant2012)[names(plant2012)=="Position"] <- "NoName2"
+names(plant2012)[names(plant2012)=="V6"] <- "Position"
+names(plant2012)[names(plant2012)=="V7"] <- "Blank"
+plant2012 <- subset(plant2012[,c("X","Number","Name","Position","Blank","Date","YEAR")])
+plant2011 <- subset(plant2011[,c("X","Number","Name","Position","Blank","Date","YEAR")])
+plantTotal <- rbind(plant2011,plant2012,plant2013,plant2015)
+plantTotal <- subset(plantTotal, !is.na(plantTotal$Date))
+plantTotal <- subset(plantTotal[,c(2:7)])
+plantTotal <- data.frame(plantTotal, Month = "2015-01-01")
+plantTotal$Month <- as.Date(plantTotal$Date)
+plantTotal$Month <- format(plantTotal$Month, format = "%m")
+
+write.csv(plantTotal, file = "plantillas_Copa_ALL.csv")
+
+plantMonth <- as.month(plantTotal$Date)
+
+plantTotalTotal <- table(plantTotal$Month)
+plantTotalTotal
+
+barplot(plantTotalTotal, main="Mini Copa 2011 a 2013 y 2015",
+        xlab= "Mes de Nacimiento", ylab="Frecuencia")
